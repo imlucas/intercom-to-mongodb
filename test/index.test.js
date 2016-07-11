@@ -44,7 +44,7 @@ describe('Intercom api wrapper testing', function() {
       expect(result).to.be.an('object');
       expect(result.__HighlandStream__).to.be.true;
       result.on('data', function(data) {
-        data.to.equal(testVars.users);
+        data.to.equal(testVars.usersOutput);
       });
       done();
     });
