@@ -1,14 +1,9 @@
 # intercom-api-wrapper [![travis][travis_img]][travis_url] [![npm][npm_img]][npm_url]
 
-> Light wrapper around intercom.io API requests to abstract out intercom-specific methods
+> Light wrapper around intercom.io's API requests to abstract out intercom-specific methods
 
 ## Example
-
 The wrapper exposes three basic functions `getUsers`, `getUsersBySegment`, and `getCount`.
-
-```javascript
-var intercom = require('lib/index.js')
-```
 
 ```javascript
 getUsers(<lastNumDays>, callback);
