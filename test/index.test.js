@@ -4,10 +4,14 @@ var expect = require('chai').expect;
 // var should = require('chai').should;
 // var sinon = require('sinon');
 
-// console.log(intercomApiWrapper.getUsers)
-// console.log(intercomApiWrapper.getUsers(1));
-// console.log(intercomApiWrapper.getUsersBySegment)
-
+// intercomApiWrapper.getUsers(1, function(err, res) {
+//   res.on('data', function(data) {
+//     console.log(data);
+//   });
+//   res.on('end', function() {
+//     console.log('FETCHED USERS BY SEGMENT');
+//   });
+// });
 
 describe('intercom-api-wrapper', function() {
   it('should exist', function() {
