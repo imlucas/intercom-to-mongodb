@@ -17,6 +17,7 @@
     "url": "git://github.com/mongodb-js/intercom-api-wrapper.git/issues"
   },
   "dependencies": {
+    "dotenv": "^2.0.0",
     "highland": "^2.8.1",
     "request": "^2.72.0"
   },
