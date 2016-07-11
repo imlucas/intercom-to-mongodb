@@ -1,56 +1,19 @@
 /* eslint no-unused-expressions:0 */
 
 var intercomApiWrapper = require('../lib/index.js');
+var testVars = require('./testVars.js');
 var request = require('request');
 var expect = require('chai').expect;
 var sinon = require('sinon');
 
-var URL = 'https://api.intercom.io';
-var auth = {
-  'user': process.env.INTERCOM_APP_ID,
-  'pass': process.env.INTERCOM_API_KEY
-};
-
-/* Different options that request.get can receive as arguments
- * Set up to stub request.get correctly and return sensible results
- */
-var getUsersOptions = {
-  uri: URL + '/users',
-  json: true,
-  auth: auth
-};
-var getUsersCreatedSinceOptions = {
-  uri: URL + '/users',
-  json: true,
-  auth: auth,
-  qs: {'created_since': 1}
-};
-var getUsersBySegmentOptions = {
-  uri: URL + '/users',
-  json: true,
-  auth: auth,
-  qs: {'segment_id': 0}
-};
-var getSegmentsOptions = {
-  uri: URL + '/segments',
-  json: true,
-  auth: auth
-};
-var getCountOptions = {
-  uri: URL + '/counts',
-  json: true,
-  auth: auth,
-  qs: { 'type': 'user', 'count': 'segment' }
-};
-
-describe('intercom-api-wrapper', function() {
+describe('Intercom api wrapper testing', function() {
   before(function(done) {
     var stub = sinon.stub(request, 'get');
-    stub.withArgs(getUsersOptions).yields(null, { statusCode: '200' }, { 'users': 'value' });
-    stub.withArgs(getUsersCreatedSinceOptions).yields(null, { statusCode: '200' }, { 'users': 'value' });
-    stub.withArgs(getSegmentsOptions).yields(null, { statusCode: '200' }, { 'segments': [{ id: 0, name: 'test' }] });
-    stub.withArgs(getUsersBySegmentOptions).yields(null, { statusCode: '200' }, { 'users': 'value' });
-    stub.withArgs(getCountOptions).yields(null, { statusCode: '200' }, { 'segment': [{ 'test': 0 }] });
+    stub.withArgs(testVars.usersOptions).yields(null, { statusCode: '200' }, testVars.usersOutput);
+    stub.withArgs(testVars.usersCreatedSinceOptions).yields(null, { statusCode: '200' }, testVars.usersOutput);
+    stub.withArgs(testVars.usersBySegmentOptions).yields(null, { statusCode: '200' }, testVars.usersOutput);
+    stub.withArgs(testVars.segmentsOptions).yields(null, { statusCode: '200' }, testVars.segmentsOutput);
+    stub.withArgs(testVars.countOptions).yields(null, { statusCode: '200' }, testVars.countsOutput);
     done();
   });
 
@@ -68,6 +31,9 @@ describe('intercom-api-wrapper', function() {
       if (err) return done(err);
       expect(result).to.be.an('object');
       expect(result.__HighlandStream__).to.be.true;
+      result.on('data', function(data) {
+        expect(data).to.equal(testVars.usersOutput);
+      });
       done();
     });
   });
@@ -77,6 +43,9 @@ describe('intercom-api-wrapper', function() {
       if (err) return done(err);
       expect(result).to.be.an('object');
       expect(result.__HighlandStream__).to.be.true;
+      result.on('data', function(data) {
+        data.to.equal(testVars.users);
+      });
       done();
     });
   });
@@ -102,6 +71,9 @@ describe('intercom-api-wrapper', function() {
       if (err) return done(err);
       expect(result).to.be.an('object');
       expect(result.__HighlandStream__).to.be.true;
+      result.on('data', function(data) {
+        expect(data).to.equal(testVars.usersOutput);
+      });
       done();
     });
   });
@@ -127,6 +99,9 @@ describe('intercom-api-wrapper', function() {
       if (err) return done(err);
       expect(result).to.be.an('object');
       expect(result.__HighlandStream__).to.be.true;
+      result.on('data', function(data) {
+        expect(data).to.equal(testVars.countsOutput);
+      });
       done();
     });
   });
