@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 var URL = 'https://api.intercom.io';
 var auth = {
   'user': process.env.INTERCOM_APP_ID,

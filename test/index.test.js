@@ -6,7 +6,7 @@ var request = require('request');
 var expect = require('chai').expect;
 var sinon = require('sinon');
 
-describe('Intercom api wrapper testing', function() {
+describe('intercom api wrapper testing', function() {
   before(function(done) {
     var stub = sinon.stub(request, 'get');
     stub.withArgs(testVars.usersOptions).yields(null, { statusCode: '200' }, testVars.usersOutput);
