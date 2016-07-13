@@ -31,8 +31,10 @@ describe('intercom api wrapper testing', function() {
       if (err) return done(err);
       expect(result).to.be.an('object');
       expect(result.__HighlandStream__).to.be.true;
+      var dataCounter = 0;
       result.on('data', function(data) {
-        expect(data).to.equal(testVars.usersOutput);
+        expect(data).to.equal(testVars.usersOutput[dataCounter]);
+        dataCounter++;
       });
       done();
     });
@@ -71,8 +73,10 @@ describe('intercom api wrapper testing', function() {
       if (err) return done(err);
       expect(result).to.be.an('object');
       expect(result.__HighlandStream__).to.be.true;
+      var dataCounter = 0;
       result.on('data', function(data) {
-        expect(data).to.equal(testVars.usersOutput);
+        expect(data).to.equal(testVars.usersOutput[dataCounter]);
+        dataCounter++;
       });
       done();
     });
@@ -99,8 +103,10 @@ describe('intercom api wrapper testing', function() {
       if (err) return done(err);
       expect(result).to.be.an('object');
       expect(result.__HighlandStream__).to.be.true;
+      var dataCounter = 0;
       result.on('data', function(data) {
-        expect(data).to.equal(testVars.countsOutput);
+        expect(data).to.equal(testVars.countsOutput[dataCounter]);
+        dataCounter++;
       });
       done();
     });
