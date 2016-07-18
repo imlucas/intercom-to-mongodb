@@ -73,8 +73,10 @@ module.exports = {
 
   // Sample response body that Intercom will return with /counts
   countsOutput: {
-    'segment': [
-      { 'test': 0 }
-    ]
+    'user': {
+      'segment': [
+        { 'test': 0 }
+      ]
+    }
   }
 };
