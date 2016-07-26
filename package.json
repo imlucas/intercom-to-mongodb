@@ -1,7 +1,7 @@
 {
   "name": "intercom-api-wrapper",
   "description": "Light wrapper around intercom.io node driver to abstract out modintercom-specific functions",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "scripts": {
     "fmt": "mongodb-js-fmt",
     "check": "mongodb-js-precommit",
