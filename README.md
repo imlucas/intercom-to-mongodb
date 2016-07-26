@@ -2,6 +2,15 @@
 
 > Light wrapper around intercom.io's API requests to abstract out intercom-specific methods
 
+## Install
+```
+npm install mongodb-js-intercom
+```
+
+```javascript
+var intercom = require('mongodb-js-intercom');
+```
+
 ## Example
 The wrapper exposes three basic functions `getUsers`, `getUsersBySegment`, and `getCount`.
 
