@@ -1,5 +1,5 @@
 {
-  "name": "intercom-api-wrapper",
+  "name": "mongodb-js-intercom",
   "description": "Light wrapper around intercom.io node driver to abstract out modintercom-specific functions",
   "version": "0.1.0",
   "scripts": {
