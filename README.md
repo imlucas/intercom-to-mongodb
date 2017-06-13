@@ -58,6 +58,38 @@ DEBUG=* intercom-to-mongodb users;
 DEBUG=* intercom-to-mongodb events;
 ```
 
+
+If you used `mongodb://localhost:27017/intercom` as `MONGODB_URL` in your `.env` file:
+
+
+```bash
+> mongo 'mongodb://localhost:27017/intercom'
+show collections
+admins
+conversations
+events
+segments
+tags
+users
+```
+
+## Todo
+
+- [x] Initial get of 10k users [from Intercom API](https://developers.intercom.com/v2.0/reference#users)
+- [x] Initial get of all admins [from Intercom API](https://developers.intercom.com/v2.0/reference#admins)
+- [x] Initial get of all tags [from Intercom API](https://developers.intercom.com/v2.0/reference#tags)
+- [x] Initial get of all segments [from Intercom API](https://developers.intercom.com/v2.0/reference#segments)
+- [x] Initial get of all conversations [from Intercom API](https://developers.intercom.com/v2.0/reference#conversations)
+- [x] Use the [Scroll API](https://developers.intercom.com/v2.0/reference#iterating-over-all-users) to get all users
+- [x] Reshape user location shape and `db.users.createIndex( { "coordinates": "2dsphere" } )`
+- [x] Cast user `*_at` epoch time fields from Intercom API as `ISODate`
+- [x] `$lookup` to inline `user.tags` from `tags.name`
+- [x] `$lookup` to inline `user.segments` from `tags.segments`
+- [x] Get all events for all users
+- [ ] Support incremental resync from Intercom API
+- [ ] For each conversation, get the full conversation from API which has `conversations_parts` populated. Once completed, the `conversation` document will be interesting, metadata alone
+- [ ] Sentiment analysis on `conversations_parts` contents, e.g. https://github.com/wooorm/retext-sentiment
+
 ## License
 
 Apache 2.0
