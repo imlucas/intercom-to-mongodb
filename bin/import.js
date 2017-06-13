@@ -3,165 +3,118 @@
 var program = require('commander');
 require('dotenv').config();
 
-var save = require('../lib/mongodb-stream').createWriteStream;
-var read = require('../lib/mongodb-stream').createReadStream;
-var createMongoWriteStream = save;
+var mongo = require('../lib/mongodb-stream');
+var save = mongo.createWriteStream;
+var read = mongo.createReadStream;
 var intercom = require('../');
 var pkg = require('../package.json');
 var es = require('event-stream');
 
-program
-  .version(pkg.version)
-  .option(
-    '-u, --url [mongodb://]',
-    'Import Intercom data into [mongodb://] deployment',
-    process.env.MONGODB_URL || 'mongodb://localhost:27017/intercom'
+program.version(pkg.version);
+
+program.command('users').description('import all user data').action(function() {
+  var cacheTagInMemory = es.through(function(t) {
+    intercom.TAGS[t.id] = t.name;
+    this.emit('data', t);
+  });
+
+  var cacheTagInMongo = save({
+    collection: 'tags'
+  });
+
+  var tags = intercom
+    .stream('tags')
+    .pipe(cacheTagInMemory)
+    .pipe(cacheTagInMongo);
+
+  var cacheSegmentInMemory = es.through(function(s) {
+    intercom.SEGMENTS[s.id] = s.name;
+    this.emit('data', s);
+  });
+
+  var cacheSegmentInMongo = save({
+    collection: 'segments'
+  });
+
+  var segments = intercom
+    .stream('segments')
+    .pipe(cacheSegmentInMemory)
+    .pipe(cacheSegmentInMongo);
+
+  var admins = intercom.stream('admins').pipe(
+    save({
+      collection: 'admins'
+    })
   );
 
-program
-  .command('users')
-  .description('import all user data')
-  .action(function(options) {
-    var url = options.parent.url;
-
-    var cacheTagInMemory = es.through(function(t) {
-      intercom.TAGS[t.id] = t.name;
-      this.emit('data', t);
-    });
-
-    var cacheTagInMongo = save({
-      url: url,
-      collection: 'tags'
-    });
-
-    var tags = intercom
-      .getTagsStream()
-      .pipe(cacheTagInMemory)
-      .pipe(cacheTagInMongo);
-
-    var cacheSegmentInMemory = es.through(function(s) {
-      intercom.SEGMENTS[s.id] = s.name;
-      this.emit('data', s);
-    });
-
-    var cacheSegmentInMongo = save({
-      url: url,
-      collection: 'segments'
-    });
-
-    var segments = intercom
-      .getSegmentsStream()
-      .pipe(cacheSegmentInMemory)
-      .pipe(cacheSegmentInMongo);
-
-    var admins = intercom.getAdminsStream().pipe(
-      save({
-        url: url,
-        collection: 'admins'
-      })
-    );
-
-    var conversations = intercom.getConversationsStream().pipe(
-      save({
-        url: url,
-        collection: 'conversations'
-      })
-    );
-
-    var cacheUserInMongo = save({
-      url: url,
-      collection: 'users'
-    });
-
-    var deps = es.merge(tags, segments, admins, conversations);
-
-    deps.pipe(
-      es.wait(function() {
-        console.log('Loaded user dependencies', {
-          segments: intercom.SEGMENTS,
-          tags: intercom.SEGMENTS
-        });
-        intercom.getUsersScrollStream().pipe(cacheUserInMongo);
-      })
-    );
-  });
-
-program
-  .command('admins')
-  .description('import all admin user data')
-  .action(function(options) {
-    var opts = {
-      url: options.parent.url,
-      collection: 'admins'
-    };
-
-    intercom.getAdminsStream().pipe(createMongoWriteStream(opts));
-  });
-
-program
-  .command('tags')
-  .description('import all tag data')
-  .action(function(options) {
-    var opts = {
-      url: options.parent.url,
-      collection: 'tags'
-    };
-
-    intercom.getTagsStream().pipe(createMongoWriteStream(opts));
-  });
-
-program
-  .command('tags')
-  .description('import all conversation data')
-  .action(function(options) {
-    var url = options.parent.url;
-    var opts = {
-      url: url,
+  var conversations = intercom.stream('conversations').pipe(
+    save({
       collection: 'conversations'
-    };
+    })
+  );
 
-    intercom.getConversationsStream().pipe(createMongoWriteStream(opts));
+  var cacheUserInMongo = save({
+    collection: 'users'
   });
 
-program
-  .command('segments')
-  .description('import all segment data')
-  .action(function(options) {
-    var opts = {
-      url: options.parent.url,
-      collection: 'segments'
-    };
+  var deps = es.merge(tags, segments, admins, conversations);
 
-    intercom.getSegmentsStream().pipe(createMongoWriteStream(opts));
+  deps.pipe(
+    es.wait(function() {
+      intercom.stream('users').pipe(cacheUserInMongo);
+    })
+  );
+});
+
+intercom.BASIC_ENTITY_TYPES.forEach(function(t) {
+  program.command(t).description('import data for all ' + t).action(function() {
+    intercom.stream(t).pipe(
+      save({
+        collection: t
+      })
+    );
   });
+});
 
 var createWorkerQueue = require('async').queue;
 program
   .command('events')
   .description('import all event data')
-  .action(function(options) {
-    var url = options.parent.url;
-
+  .action(function() {
     var users = read({
-      url: url,
       collection: 'users',
       options: { fields: { _id: 1 } }
     });
 
-    var worker = createWorkerQueue(function(d, cb) {
-      var src = intercom.getUserEventsStream(d._id);
-      var dest = save({
-        url: url,
-        collection: 'events'
-      });
+    var saveEventsOptions = {
+      collection: 'events'
+    };
 
+    var worker = createWorkerQueue(function(d, cb) {
+      var src = intercom
+        .getUserEventsStream(d._id)
+        .on('error', function(err) {
+          console.error('Error fetching event stream for', d, err);
+          console.error('Trying to continue');
+          cb();
+        })
+        .pipe(
+          es.map(function(doc, fn) {
+            if (/^error/.test(doc.event_name)) {
+              // drop old gnarly error events
+              return fn();
+            }
+            fn(null, doc);
+          })
+        );
+      var dest = save(saveEventsOptions);
       dest.on('end', function() {
         console.log('Finished event stream for', d);
         cb();
       });
 
       src.pipe(dest);
-    }, 10);
+    }, 2);
 
     worker.drain = function() {
       console.log('all items have been processed');
